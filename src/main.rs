@@ -12,7 +12,7 @@ use utils::cli_parser::build_cli;
 async fn main() -> mongodb::error::Result<()> {
     let matches = build_cli().get_matches();
 
-    let db_url = "mongodb+srv://Sambit:Nibedita%401981Singha@rust-cli.3lcghw1.mongodb.net/?retryWrites=true&w=majority&appName=Rust-CLI";
+    let db_url = "mongodb://localhost:27017";
     let db_name = "minor_project_db";
     let user_collection = "users";
     let task_collection = "tasks";
