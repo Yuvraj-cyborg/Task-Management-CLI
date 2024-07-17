@@ -1,33 +1,25 @@
 mod auth;
+mod cloud_sync;
+mod tasks;
 mod utils;
 
 use auth::auth_manager::AuthManager;
-use mongodb::bson::doc;
-use mongodb::options::{ClientOptions, ServerApi, ServerApiVersion};
-use mongodb::Client;
-use tokio;
+use cloud_sync::CloudSync; // Corrected import path
+use tasks::task_manager::TaskManager;
 use utils::cli_parser::build_cli;
 
 #[tokio::main]
 async fn main() -> mongodb::error::Result<()> {
     let matches = build_cli().get_matches();
 
-    let db_url = "mongodb+srv://Sambit:Nibedita%401981Singha@rust-cli.3lcghw1.mongodb.net/?retryWrites=true&w=majority";
+    let db_url = "mongodb+srv://Sambit:<password>@rust-cli.3lcghw1.mongodb.net/?retryWrites=true&w=majority&appName=Rust-CLI";
     let db_name = "minor_project_db";
-    let collection_name = "users";
+    let user_collection = "users";
+    let task_collection = "tasks";
 
-    let mut client_options = ClientOptions::parse(db_url).await?;
-    let server_api = ServerApi::builder().version(ServerApiVersion::V1).build();
-    client_options.server_api = Some(server_api);
-
-    let client = Client::with_options(client_options)?;
-    client
-        .database("admin")
-        .run_command(doc! {"ping": 1}, None)
-        .await?;
-    println!("Pinged your deployment. You successfully connected to MongoDB!");
-
-    let auth_manager = AuthManager::new(db_url, db_name, collection_name).await;
+    let auth_manager = AuthManager::new(db_url, db_name, user_collection).await;
+    let task_manager = TaskManager::new(db_url, db_name, task_collection).await;
+    let cloud_sync = CloudSync::new(db_url, db_name, task_collection).await;
 
     if let Some(matches) = matches.subcommand_matches("register") {
         let username = matches.get_one::<String>("username").unwrap();
@@ -40,8 +32,64 @@ async fn main() -> mongodb::error::Result<()> {
         let username = matches.get_one::<String>("username").unwrap();
         let password = matches.get_one::<String>("password").unwrap();
         match auth_manager.login(username, password).await {
-            Ok(_) => println!("User logged in successfully."),
+            Ok(logged_in) => {
+                if logged_in {
+                    println!("User logged in successfully.");
+                } else {
+                    println!("Invalid username or password.");
+                }
+            }
             Err(e) => eprintln!("Failed to login user: {}", e),
+        }
+    } else if let Some(matches) = matches.subcommand_matches("add_task") {
+        let description = matches.get_one::<String>("description").unwrap();
+        match task_manager.add_task(description).await {
+            Ok(_) => println!("Task added successfully."),
+            Err(e) => eprintln!("Failed to add task: {}", e),
+        }
+    } else if let Some(_) = matches.subcommand_matches("list_tasks") {
+        match task_manager.list_tasks().await {
+            Ok(tasks) => {
+                for task in tasks {
+                    println!("{:?}", task);
+                }
+            }
+            Err(e) => eprintln!("Failed to list tasks: {}", e),
+        }
+    } else if let Some(matches) = matches.subcommand_matches("complete_task") {
+        let description = matches.get_one::<String>("description").unwrap();
+        match task_manager.complete_task(description).await {
+            Ok(_) => println!("Task marked as complete."),
+            Err(e) => eprintln!("Failed to complete task: {}", e),
+        }
+    } else if let Some(matches) = matches.subcommand_matches("incomplete_task") {
+        let description = matches.get_one::<String>("description").unwrap();
+        match task_manager.incomplete_task(description).await {
+            Ok(_) => println!("Task marked as incomplete."),
+            Err(e) => eprintln!("Failed to mark task as incomplete: {}", e),
+        }
+    } else if let Some(matches) = matches.subcommand_matches("remove_task") {
+        let description = matches.get_one::<String>("description").unwrap();
+        match task_manager.remove_task(description).await {
+            Ok(_) => println!("Task removed successfully."),
+            Err(e) => eprintln!("Failed to remove task: {}", e),
+        }
+    } else if let Some(_) = matches.subcommand_matches("push") {
+        match cloud_sync
+            .push(task_manager.list_tasks().await.unwrap())
+            .await
+        {
+            Ok(_) => println!("Tasks pushed to cloud successfully."),
+            Err(e) => eprintln!("Failed to push tasks to cloud: {}", e),
+        }
+    } else if let Some(_) = matches.subcommand_matches("pull") {
+        match cloud_sync.pull().await {
+            Ok(tasks) => {
+                for task in tasks {
+                    println!("{:?}", task);
+                }
+            }
+            Err(e) => eprintln!("Failed to pull tasks from cloud: {}", e),
         }
     }
 
