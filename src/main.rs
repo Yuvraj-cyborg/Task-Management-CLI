@@ -12,7 +12,7 @@ use utils::cli_parser::build_cli;
 async fn main() -> mongodb::error::Result<()> {
     let matches = build_cli().get_matches();
 
-    let db_url = "mongodb+srv://Sambit:<password>@rust-cli.3lcghw1.mongodb.net/?retryWrites=true&w=majority&appName=Rust-CLI";
+    let db_url = "mongodb+srv://Sambit:Nibedita%401981Singha@rust-cli.3lcghw1.mongodb.net/?retryWrites=true&w=majority&appName=Rust-CLI";
     let db_name = "minor_project_db";
     let user_collection = "users";
     let task_collection = "tasks";
@@ -75,10 +75,15 @@ async fn main() -> mongodb::error::Result<()> {
             Err(e) => eprintln!("Failed to remove task: {}", e),
         }
     } else if let Some(_) = matches.subcommand_matches("push") {
-        match cloud_sync
-            .push(task_manager.list_tasks().await.unwrap())
+        let tasks_to_push: Vec<cloud_sync::Task> = task_manager
+            .list_tasks()
             .await
-        {
+            .unwrap()
+            .into_iter()
+            .map(|task| task.into())
+            .collect();
+
+        match cloud_sync.push(tasks_to_push).await {
             Ok(_) => println!("Tasks pushed to cloud successfully."),
             Err(e) => eprintln!("Failed to push tasks to cloud: {}", e),
         }

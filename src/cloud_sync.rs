@@ -33,3 +33,13 @@ impl CloudSync {
         Ok(tasks)
     }
 }
+
+impl From<crate::tasks::task_manager::Task> for Task {
+    fn from(item: crate::tasks::task_manager::Task) -> Self {
+        Task {
+            // Assuming both structs have the same fields `description` and `completed`
+            description: item.description,
+            completed: item.completed,
+        }
+    }
+}
