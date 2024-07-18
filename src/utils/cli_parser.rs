@@ -1,43 +1,34 @@
 use clap::{Arg, Command};
 
 pub fn build_cli() -> Command {
-    Command::new("Minor Project")
+    Command::new("Task Manager")
         .version("1.0")
-        .author("Your Name <youremail@example.com>")
-        .about("Task Management CLI")
+        .author("Author Name <author@example.com>")
+        .about("Manages tasks")
         .subcommand(
             Command::new("register")
-                .about("Register a new user")
+                .about("Registers a new user")
                 .arg(Arg::new("username").required(true))
                 .arg(Arg::new("password").required(true)),
         )
         .subcommand(
             Command::new("login")
-                .about("Login a user")
+                .about("Logs in a user")
                 .arg(Arg::new("username").required(true))
                 .arg(Arg::new("password").required(true)),
         )
+        .subcommand(Command::new("logout").about("Logs out the current user"))
         .subcommand(
             Command::new("add_task")
-                .about("Add a new task")
+                .about("Adds a new task")
                 .arg(Arg::new("description").required(true)),
         )
-        .subcommand(Command::new("list_tasks").about("List all tasks"))
-        .subcommand(
-            Command::new("complete_task")
-                .about("Mark a task as complete")
-                .arg(Arg::new("description").required(true)),
-        )
-        .subcommand(
-            Command::new("incomplete_task")
-                .about("Mark a task as incomplete")
-                .arg(Arg::new("description").required(true)),
-        )
+        .subcommand(Command::new("list_tasks").about("Lists all tasks"))
         .subcommand(
             Command::new("remove_task")
-                .about("Remove a task")
+                .about("Removes a task")
                 .arg(Arg::new("description").required(true)),
         )
-        .subcommand(Command::new("push").about("Push local tasks to cloud"))
-        .subcommand(Command::new("pull").about("Pull tasks from cloud"))
+        .subcommand(Command::new("push").about("Pushes local tasks to the cloud"))
+        .subcommand(Command::new("pull").about("Pulls tasks from the cloud to local storage"))
 }
