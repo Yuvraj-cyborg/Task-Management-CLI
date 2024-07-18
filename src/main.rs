@@ -6,10 +6,8 @@ mod utils;
 
 use auth::user::UserManager;
 use cloud_sync::CloudSync;
-use dotenv::dotenv;
 use local_storage::LocalStorage;
 use mongodb::Client;
-use std::env;
 use std::sync::Arc;
 use task::Task;
 use tokio::main;
@@ -17,7 +15,7 @@ use utils::cli_parser::build_cli;
 
 #[main]
 async fn main() {
-    dotenv().ok();
+    // Removed dotenv().ok();
 
     let cli = build_cli();
     let matches = cli.get_matches();
@@ -25,11 +23,9 @@ async fn main() {
     let local_storage = LocalStorage::new("local_tasks.db");
     let user_manager = UserManager::new(local_storage.db.clone());
 
-    let client = Arc::new(
-        Client::with_uri_str(&env::var("MONGODB_ATLAS_URI").unwrap())
-            .await
-            .unwrap(),
-    );
+    // Hardcoded MongoDB Atlas URI
+    let db_url = "mongodb+srv://Sambit:Sambit@rust-cli.mvjq4zh.mongodb.net/";
+    let client = Arc::new(Client::with_uri_str(db_url).await.unwrap());
     let cloud_sync = CloudSync::new(client.clone(), "task_db", "tasks").await;
 
     match matches.subcommand() {
