@@ -2,8 +2,9 @@ use futures::TryStreamExt;
 use mongodb::{bson::doc, Client, Collection};
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Task {
+    pub list_name: String,
     pub description: String,
     pub completed: bool,
 }
@@ -21,8 +22,9 @@ impl TaskManager {
         TaskManager { collection }
     }
 
-    pub async fn add_task(&self, description: &str) -> mongodb::error::Result<()> {
+    pub async fn add_task(&self, list_name: &str, description: &str) -> mongodb::error::Result<()> {
         let new_task = Task {
+            list_name: list_name.to_string(),
             description: description.to_string(),
             completed: false,
         };
@@ -37,10 +39,14 @@ impl TaskManager {
         Ok(tasks)
     }
 
-    pub async fn complete_task(&self, description: &str) -> mongodb::error::Result<()> {
+    pub async fn complete_task(
+        &self,
+        list_name: &str,
+        description: &str,
+    ) -> mongodb::error::Result<()> {
         self.collection
             .update_one(
-                doc! { "description": description },
+                doc! { "list_name": list_name, "description": description },
                 doc! { "$set": { "completed": true } },
                 None,
             )
@@ -48,10 +54,14 @@ impl TaskManager {
         Ok(())
     }
 
-    pub async fn incomplete_task(&self, description: &str) -> mongodb::error::Result<()> {
+    pub async fn incomplete_task(
+        &self,
+        list_name: &str,
+        description: &str,
+    ) -> mongodb::error::Result<()> {
         self.collection
             .update_one(
-                doc! { "description": description },
+                doc! { "list_name": list_name, "description": description },
                 doc! { "$set": { "completed": false } },
                 None,
             )
@@ -59,9 +69,16 @@ impl TaskManager {
         Ok(())
     }
 
-    pub async fn remove_task(&self, description: &str) -> mongodb::error::Result<()> {
+    pub async fn remove_task(
+        &self,
+        list_name: &str,
+        description: &str,
+    ) -> mongodb::error::Result<()> {
         self.collection
-            .delete_one(doc! { "description": description }, None)
+            .delete_one(
+                doc! { "list_name": list_name, "description": description },
+                None,
+            )
             .await?;
         Ok(())
     }

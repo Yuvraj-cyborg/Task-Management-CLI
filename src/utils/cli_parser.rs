@@ -1,34 +1,54 @@
-use clap::{Arg, Command};
+use clap::{App, Arg, SubCommand};
 
-pub fn build_cli() -> Command {
-    Command::new("Task Manager")
+pub fn build_cli() -> App<'static, 'static> {
+    App::new("Todo CLI")
         .version("1.0")
-        .author("Author Name <author@example.com>")
-        .about("Manages tasks")
+        .about("Manage your tasks")
         .subcommand(
-            Command::new("register")
-                .about("Registers a new user")
-                .arg(Arg::new("username").required(true))
-                .arg(Arg::new("password").required(true)),
+            SubCommand::with_name("register")
+                .about("Register a new user")
+                .arg(Arg::with_name("username").required(true))
+                .arg(Arg::with_name("password").required(true)),
         )
         .subcommand(
-            Command::new("login")
-                .about("Logs in a user")
-                .arg(Arg::new("username").required(true))
-                .arg(Arg::new("password").required(true)),
+            SubCommand::with_name("login")
+                .about("Login as a user")
+                .arg(Arg::with_name("username").required(true))
+                .arg(Arg::with_name("password").required(true)),
         )
-        .subcommand(Command::new("logout").about("Logs out the current user"))
+        .subcommand(SubCommand::with_name("logout").about("Logout the current user"))
         .subcommand(
-            Command::new("add_task")
-                .about("Adds a new task")
-                .arg(Arg::new("description").required(true)),
+            SubCommand::with_name("add")
+                .about("Add a task to a list")
+                .arg(Arg::with_name("list_name").required(true))
+                .arg(Arg::with_name("item").required(true)),
         )
-        .subcommand(Command::new("list_tasks").about("Lists all tasks"))
         .subcommand(
-            Command::new("remove_task")
-                .about("Removes a task")
-                .arg(Arg::new("description").required(true)),
+            SubCommand::with_name("show")
+                .about("Show tasks")
+                .arg(Arg::with_name("list_name"))
+                .arg(Arg::with_name("all").short("a"))
+                .arg(Arg::with_name("completed").short("c"))
+                .arg(Arg::with_name("incomplete").short("i")),
         )
-        .subcommand(Command::new("push").about("Pushes local tasks to the cloud"))
-        .subcommand(Command::new("pull").about("Pulls tasks from the cloud to local storage"))
+        .subcommand(
+            SubCommand::with_name("complete")
+                .about("Mark a task as completed")
+                .arg(Arg::with_name("list_name").required(true))
+                .arg(Arg::with_name("item_number").required(true)),
+        )
+        .subcommand(
+            SubCommand::with_name("incomplete")
+                .about("Mark a task as incomplete")
+                .arg(Arg::with_name("list_name").required(true))
+                .arg(Arg::with_name("item_number").required(true)),
+        )
+        .subcommand(
+            SubCommand::with_name("remove")
+                .about("Remove tasks or lists")
+                .arg(Arg::with_name("list_name"))
+                .arg(Arg::with_name("item_number")),
+        )
+        .subcommand(SubCommand::with_name("push").about("Push tasks to cloud"))
+        .subcommand(SubCommand::with_name("pull").about("Pull tasks from cloud"))
 }
