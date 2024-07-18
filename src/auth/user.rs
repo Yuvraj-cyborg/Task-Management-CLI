@@ -46,7 +46,5 @@ impl UserManager {
         Err("User not found".to_string())
     }
 
-    pub fn logout_user(&self) {
-        // Implement logout logic if needed
-    }
+    pub fn logout_user(&self) {}
 }
